@@ -10,7 +10,9 @@ export default {
     needShowLoginFrom: false,
     needShowRegistrationForm: false,
     roles: [],
-    user:null
+    user:null,
+    minesCountFrom: 0,
+    minesCountTo: 0
   },
   getters: {
     isLogged(state) {
@@ -28,6 +30,12 @@ export default {
     },
     user(state){
       return state.user;
+    },
+    minesCountFrom(state){
+      return state.minesCountFrom;
+    },
+    minesCountTo(state){
+      return state.minesCountTo;
     },
   },
   mutations: {
@@ -49,6 +57,12 @@ export default {
     setUserName(state, e){
       state.user.userInfo.name = e.target.value;
     },
+    setMinesCountFrom(state, data){
+      state.minesCountFrom = data
+    },
+    setMinesCountTo(state, data){
+      state.minesCountTo = data
+    }
   },
   actions: {
     async signIn(store, data) {
@@ -83,10 +97,8 @@ export default {
     ,
     async checkAuthorization(store) {
       try {
-      const response = await axios.get('/backend/users/me');
+      const response = await axios.get('/backend/game/get');
       const responseStatus = response.status === 200;
-      store.commit('updateLoginInfo', responseStatus);
-      store.commit('setUser', response.data)
       return responseStatus;
       }
       catch (e) {
@@ -111,6 +123,18 @@ export default {
         return response.status === 200;
       } catch (error) {
         return false;
+      }
+    },
+    async calculateMinesCount(store, data) {
+      try {
+        const response = await axios.post('/backend/game/minesCount', data);
+        if(response.status === 200){
+          store.commit('setMinesCountFrom', response.data.minesFrom);
+          store.commit('setMinesCountTo', response.data.minesTo);
+        }
+      }
+      catch (e) {
+        console.log(e);
       }
     },
   }

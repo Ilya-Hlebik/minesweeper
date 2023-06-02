@@ -29,6 +29,7 @@
         </div>
       </a-layout-content>
       <a-layout-footer class="footer">
+        <game-settings></game-settings>
         <button @click="resetGame">Reset</button>
       </a-layout-footer>
     </a-layout>
@@ -36,7 +37,9 @@
 </template>
 
 <script>
-  import {mapGetters} from 'vuex';
+  import {mapActions} from 'vuex';
+  import GameSettings from "./GameSettings";
+
   export default {
     data() {
       return {
@@ -91,6 +94,7 @@
     },
     methods: {
       initializeBoard() {
+          this.checkAuthorization();
       },
       revealCell(rowIndex, colIndex) {
         // Logic to reveal the clicked cell goes here
@@ -103,8 +107,13 @@
       resetGame() {
         // Logic to reset the game goes here
       },
-
+      ...mapActions('game', {
+        checkAuthorization: 'checkAuthorization'
+      }),
     },
+  components: {
+    GameSettings
+  }
   }
 </script>
 <style scoped>

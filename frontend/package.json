@@ -2,9 +2,8 @@
   "name": "webpacktemplate",
   "version": "1.0.0",
   "description": "My template",
-  "main": "index.js",
   "scripts": {
-    "dev": "webpack-dev-server --open --config ./build/webpack.dev.conf.js",
+    "dev": "vue-cli-service serve",
     "build": "webpack --config ./build/webpack.build.conf.js"
   },
   "browserslist": [
@@ -33,6 +32,8 @@
     "vuex-persistedstate": "^3.0.1"
   },
   "devDependencies": {
+    "@vue/cli-plugin-babel": "~4.5.0",
+    "@vue/cli-service": "~4.5.0",
     "@babel/core": "^7.10.5",
     "@babel/preset-env": "^7.10.4",
     "autoprefixer": "^9.8.5",

@@ -2,8 +2,7 @@ import Vue from 'vue';
 import Vuex from 'vuex';
 import createPersistedState from "vuex-persistedstate";
 import * as Cookies from "js-cookie";
-import login from './modules/login';
-import main from './modules/main';
+import game from './modules/game';
 
 Vue.use(Vuex);
 
@@ -16,8 +15,7 @@ export const store = new Vuex.Store({
   ],
   modules: {
     devtool: 'source-map',
-    main,
-    login,
+    game,
   },
 
   strict: process.env.NODE_ENV !== 'production'
