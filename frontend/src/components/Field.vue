@@ -5,10 +5,12 @@
         <h1>Minesweeper</h1>
       </a-layout-header>
       <a-layout-content class="content">
-        <div class="board">
+        <game-settings v-if="!boardInitiated" @showBoard="onShowBoard">
+        </game-settings>
+        <div class="board" v-if="boardInitiated">
           <div
             class="cell"
-            v-for="(row, rowIndex) in board"
+            v-for="(row, rowIndex) in this.getBoard"
             :key="rowIndex"
           >
             <div
@@ -28,8 +30,7 @@
           </div>
         </div>
       </a-layout-content>
-      <a-layout-footer class="footer">
-        <game-settings></game-settings>
+      <a-layout-footer class="footer" v-if="boardInitiated">
         <button @click="resetGame">Reset</button>
       </a-layout-footer>
     </a-layout>
@@ -37,83 +38,51 @@
 </template>
 
 <script>
-  import {mapActions} from 'vuex';
+  import {mapActions, mapGetters, mapMutations} from 'vuex';
   import GameSettings from "./GameSettings";
 
   export default {
     data() {
       return {
-        board: [
-          [
-            { isMine: false, revealed: false, flagged: false, content: '' },
-            { isMine: true, revealed: false, flagged: false, content: '' },
-            { isMine: false, revealed: false, flagged: false, content: ' 1 ' },
-            { isMine: false, revealed: false, flagged: false, content: ' 1 ' },
-            { isMine: false, revealed: false, flagged: false, content: '' },
-            { isMine: false, revealed: false, flagged: false, content: ' 2 ' },
-            { isMine: false, revealed: false, flagged: false, content: '' },
-            { isMine: false, revealed: false, flagged: false, content: '' },
-          ],
-          [
-            { isMine: false, revealed: false, flagged: false, content: ' 2 ' },
-            { isMine: false, revealed: false, flagged: false, content: '' },
-            { isMine: false, revealed: false, flagged: false, content: '' },
-            { isMine: true, revealed: false, flagged: false, content: '' },
-            { isMine: false, revealed: false, flagged: false, content: '' },
-            { isMine: false, revealed: false, flagged: false, content: ' 3 ' },
-            { isMine: false, revealed: false, flagged: false, content: ' 2 ' },
-            { isMine: false, revealed: false, flagged: false, content: ' 1 ' },
-          ]
-          ,
-          [
-            { isMine: false, revealed: false, flagged: false, content: ' 2 ' },
-            { isMine: false, revealed: false, flagged: false, content: '' },
-            { isMine: false, revealed: true, flagged: false, content: '' },
-            { isMine: true, revealed: false, flagged: false, content: '' },
-            { isMine: false, revealed: false, flagged: false, content: '' },
-            { isMine: false, revealed: false, flagged: false, content: ' 3 ' },
-            { isMine: false, revealed: false, flagged: false, content: ' 2 ' },
-            { isMine: false, revealed: false, flagged: false, content: ' 1 ' },
-          ]
-          ,
-          [
-            { isMine: false, revealed: false, flagged: false, content: ' 2 ' },
-            { isMine: false, revealed: false, flagged: false, content: '' },
-            { isMine: false, revealed: true, flagged: false, content: '' },
-            { isMine: true, revealed: false, flagged: false, content: '' },
-            { isMine: false, revealed: false, flagged: false, content: '' },
-            { isMine: false, revealed: false, flagged: false, content: ' 3 ' },
-            { isMine: false, revealed: false, flagged: false, content: ' 2 ' },
-            { isMine: false, revealed: false, flagged: false, content: ' 1 ' },
-          ]
-        ]
-      };
+        board: this.getBoard,
+        boardInitiated:false
+      }
     },
     mounted() {
       this.initializeBoard();
     },
     methods: {
       initializeBoard() {
-          this.checkAuthorization();
       },
       revealCell(rowIndex, colIndex) {
         // Logic to reveal the clicked cell goes here
       },
       toggleFlag(rowIndex, colIndex) {
-        console.log(1)
-        this.board[rowIndex][colIndex].flagged = true
+        this.toggleBoardFlag({row: rowIndex, column: colIndex})
         // Logic to toggle flag on the cell goes here
       },
       resetGame() {
+        debugger
+        this.onShowBoard(false);
         // Logic to reset the game goes here
       },
+      onShowBoard(value){
+        this.boardInitiated = value
+      },
       ...mapActions('game', {
-        checkAuthorization: 'checkAuthorization'
+      }),
+      ...mapMutations('game', {
+        toggleBoardFlag: 'toggleBoardFlag',
       }),
     },
-  components: {
-    GameSettings
-  }
+    computed: {
+      ...mapGetters('game', {
+        getBoard: 'board',
+      }),
+    },
+    components: {
+      GameSettings
+    }
   }
 </script>
 <style scoped>
@@ -150,6 +119,7 @@
   }
 
   .inner-cell {
+    border-style: solid;
     width: 30px;
     height: 30px;
     background-color: #bbb;
