@@ -22,8 +22,8 @@
                 'revealed': col.revealed,
                 'flagged': col.flagged,
               }"
-              @click="revealCell(rowIndex, colIndex)"
-              @contextmenu.prevent="toggleFlag(rowIndex, colIndex)"
+              @click="revealCell(rowIndex, colIndex, col.revealed)"
+              @contextmenu.prevent="toggleFlag(rowIndex, colIndex, col.flagged)"
             >
               {{ col.content }}
             </div>
@@ -44,8 +44,7 @@
   export default {
     data() {
       return {
-        board: this.getBoard,
-        boardInitiated:false
+        boardInitiated: false
       }
     },
     mounted() {
@@ -54,22 +53,26 @@
     methods: {
       initializeBoard() {
       },
-      revealCell(rowIndex, colIndex) {
+      revealCell(rowIndex, colIndex, revealed) {
+        if (!revealed) {
+          this.revealCellOnBoard({row: rowIndex, column: colIndex, revealed: revealed});
+        }
         // Logic to reveal the clicked cell goes here
       },
-      toggleFlag(rowIndex, colIndex) {
-        this.toggleBoardFlag({row: rowIndex, column: colIndex})
+      toggleFlag(rowIndex, colIndex, flagged) {
+        this.setFlagged({row: rowIndex, column: colIndex, flagged: !flagged})
         // Logic to toggle flag on the cell goes here
       },
       resetGame() {
-        debugger
         this.onShowBoard(false);
         // Logic to reset the game goes here
       },
-      onShowBoard(value){
+      onShowBoard(value) {
         this.boardInitiated = value
       },
       ...mapActions('game', {
+        revealCellOnBoard: 'revealCell',
+        setFlagged: 'setFlagged'
       }),
       ...mapMutations('game', {
         toggleBoardFlag: 'toggleBoardFlag',

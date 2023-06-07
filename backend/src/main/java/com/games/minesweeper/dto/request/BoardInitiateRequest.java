@@ -1,10 +1,10 @@
 package com.games.minesweeper.dto.request;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
+@EqualsAndHashCode(callSuper = true)
 @Data
-public class BoardInitiateRequest {
-    private Integer rows;
-    private Integer columns;
+public class BoardInitiateRequest extends MinesCountRequest {
     private Integer mines;
 }

@@ -21,4 +21,8 @@ public class Board {
         this.nBombs = nBombs;
         numUnexposedRemaining = nRows * nColumns - nBombs;
     }
+
+    public void decreaseNumUnexposedRemaining() {
+        numUnexposedRemaining--;
+    }
 }
