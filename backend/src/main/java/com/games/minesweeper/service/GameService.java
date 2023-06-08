@@ -25,10 +25,11 @@ public class GameService {
     private final CellMapper cellMapper;
 
     public static Board board;
-    private GameStatus gameStatus = GameStatus.IN_PLAY;
+    private GameStatus gameStatus;
 
     public CellResponse[][] initiateBoard(BoardInitiateRequest minesCountRequest) {
         board = new Board(minesCountRequest.getRows(), minesCountRequest.getColumns(), minesCountRequest.getMines());
+        gameStatus = GameStatus.IN_PLAY;
         board.setCells(new Cell[minesCountRequest.getRows()][minesCountRequest.getColumns()]);
         CellResponse[][] cellResponse = new CellResponse[minesCountRequest.getRows()][minesCountRequest.getColumns()];
         for (int i = 0; i < minesCountRequest.getRows(); i++) {
@@ -48,8 +49,25 @@ public class GameService {
                 .build();
     }
 
+    public void setFlagged(SetFlaggedRequest setFlaggedRequest) {
+        board.getCells()[setFlaggedRequest.getRow()][setFlaggedRequest.getColumn()].setFlagged(setFlaggedRequest.isFlagged());
+    }
+
+    public GameResponse showAll() {
+        for (int i = 0; i < board.getNRows(); i++) {
+            for (int j = 0; j < board.getNColumns(); j++) {
+                board.getCells()[i][j].setHidden(false);
+            }
+        }
+        return GameResponse
+                .builder()
+                .gameStatus(gameStatus)
+                .cellResponse(cellMapper.cellToCellResponse(board.getCells()))
+                .build();
+    }
+
     private void openCell(int i, int j) {
-        if (i < 0 || i >= board.getNRows() || j < 0 || j >= board.getNColumns() || (board.isInitialized() && !board.getCells()[i][j].isHidden())) {
+        if (i < 0 || i >= board.getNRows() || j < 0 || j >= board.getNColumns() || (board.isInitialized() && (!board.getCells()[i][j].isHidden() || board.getCells()[i][j].isFlagged()))) {
             System.out.println("Out of range or already open");
             return;
         }
@@ -58,17 +76,17 @@ public class GameService {
         }
         Cell cell = board.getCells()[i][j];
         if (cell.isBomb()) {
+            cell.setHidden(false);
             System.out.println("You hit the bomb!");
             gameStatus = GameStatus.LOSE;
-        }
-        if (cell.getCellType() == CellType.NUMBER) {
+        } else if (cell.getCellType() == CellType.NUMBER) {
             cell.setHidden(false);
             System.out.println("Open " + i + " " + j);
             board.decreaseNumUnexposedRemaining();
         } else {
             openAllBlankCells(board, cell);
         }
-        if (board.getNumUnexposedRemaining() == 0){
+        if (board.getNumUnexposedRemaining() == 0) {
             gameStatus = GameStatus.WIN;
         }
     }
@@ -83,11 +101,11 @@ public class GameService {
             int i = poll.getColumn();
             int j = poll.getRow();
             poll.setHidden(false);
-            board.decreaseNumUnexposedRemaining();
             if (poll.isBlank()) {
                 checkOtherSpots(board, i, j, cells, openedCells);
             }
         }
+        openedCells.stream().distinct().filter(cell1 -> !cell1.isHidden()).forEach(cell1 -> board.decreaseNumUnexposedRemaining());
     }
 
     private void checkOtherSpots(Board board, int i, int j, Queue<Cell> cells, List<Cell> openedCells) {
@@ -115,9 +133,5 @@ public class GameService {
             cells.add(cell);
             openedCells.add(cell);
         }
-    }
-
-    public void setFlagged(SetFlaggedRequest setFlaggedRequest) {
-        board.getCells()[setFlaggedRequest.getRow()][setFlaggedRequest.getColumn()].setFlagged(setFlaggedRequest.isFlagged());
     }
 }

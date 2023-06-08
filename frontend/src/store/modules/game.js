@@ -82,6 +82,18 @@ export default {
       } catch (e) {
         console.log(e);
       }
+    },
+    async showAll(store, data) {
+      try {
+        const response =   await axios.post('/backend/game/showAll', data);
+        if (response.status === 200) {
+          debugger
+          store.commit('setBoard', response.data.cellResponse);
+          store.commit('setGameStatus', response.data.gameStatus);
+        }
+      } catch (e) {
+        console.log(e);
+      }
     }
   }
 }

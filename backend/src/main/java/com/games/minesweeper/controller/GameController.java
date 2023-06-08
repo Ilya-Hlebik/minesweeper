@@ -37,4 +37,9 @@ public class GameController {
     public void setFlagged(@RequestBody SetFlaggedRequest setFlaggedRequest) {
           gameService.setFlagged(setFlaggedRequest);
     }
+
+    @PostMapping(value = "/showAll")
+    public GameResponse showAll() {
+        return gameService.showAll();
+    }
 }

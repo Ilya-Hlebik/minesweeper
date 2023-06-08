@@ -18,11 +18,11 @@
               v-for="(col, colIndex) in row"
               :key="colIndex"
               :class="{
-                'mine': col.isMine,
+                'mine': col.mine,
                 'revealed': col.revealed,
                 'flagged': col.flagged,
               }"
-              @click="revealCell(rowIndex, colIndex, col.revealed)"
+              @click="revealCell(rowIndex, colIndex, col.revealed, col.flagged)"
               @contextmenu.prevent="toggleFlag(rowIndex, colIndex, col.flagged)"
             >
               {{ col.content }}
@@ -30,6 +30,13 @@
           </div>
         </div>
       </a-layout-content>
+      <a-layout-footer class="footer" v-if="boardInitiated && updateGameStatus">
+       <span :class="{
+                'big-blue-font': this.getGameStatus === 'WIN',
+                'big-red-font': this.getGameStatus === 'LOSE',
+              }">{{getGameStatus}}</span>
+      </a-layout-footer>
+
       <a-layout-footer class="footer" v-if="boardInitiated">
         <button @click="resetGame">Reset</button>
       </a-layout-footer>
@@ -53,8 +60,8 @@
     methods: {
       initializeBoard() {
       },
-      revealCell(rowIndex, colIndex, revealed) {
-        if (!revealed) {
+      revealCell(rowIndex, colIndex, revealed, flagged) {
+        if (!revealed && !flagged) {
           this.revealCellOnBoard({row: rowIndex, column: colIndex, revealed: revealed});
         }
         // Logic to reveal the clicked cell goes here
@@ -65,6 +72,7 @@
       },
       resetGame() {
         this.onShowBoard(false);
+        this.setGameStatus('');
         // Logic to reset the game goes here
       },
       onShowBoard(value) {
@@ -72,16 +80,26 @@
       },
       ...mapActions('game', {
         revealCellOnBoard: 'revealCell',
-        setFlagged: 'setFlagged'
+        setFlagged: 'setFlagged',
+        showAll: 'showAll'
       }),
       ...mapMutations('game', {
         toggleBoardFlag: 'toggleBoardFlag',
+        setGameStatus: 'setGameStatus'
       }),
     },
     computed: {
       ...mapGetters('game', {
         getBoard: 'board',
+        getGameStatus: 'getGameStatus'
       }),
+      updateGameStatus() {
+        if (this.getGameStatus === 'WIN' || this.getGameStatus === 'LOSE') {
+          this.showAll();
+          return true;
+        }
+        return false;
+      }
     },
     components: {
       GameSettings
@@ -149,5 +167,13 @@
     display: flex;
     justify-content: center;
     align-items: center;
+  }
+  .big-red-font {
+    font-size: 24px; /* Adjust the font size as needed */
+    color: red;
+  }
+  .big-blue-font {
+    font-size: 24px; /* Adjust the font size as needed */
+    color: #0004ff;
   }
 </style>
