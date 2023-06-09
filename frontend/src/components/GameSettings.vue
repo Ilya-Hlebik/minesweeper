@@ -24,8 +24,8 @@
       <a-input v-model:value="columns"/>
     </a-form-item>
 
-    <a-form-item><span v-if="showMinesCount">mines min: {{minesCountFrom}} mines max: {{minesCountTo}}</span>
-    </a-form-item>
+    <span v-if="showMinesCount">mines min: {{minesCountFrom}} mines max: {{minesCountTo}}</span>
+
     <a-form-item
       label="Mines"
       name="mines"

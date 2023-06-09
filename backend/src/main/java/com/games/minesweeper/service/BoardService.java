@@ -106,4 +106,29 @@ public class BoardService {
         }
         return numberOfBombs;
     }
+
+    public int getCurrentCountOfFlags(Board board) {
+        int value = 0;
+        for (int i = 0; i < board.getNRows(); i++) {
+            for (int j = 0; j < board.getNColumns(); j++) {
+                if (board.getCells()[i][j].isFlagged()) {
+                    value++;
+                }
+            }
+        }
+        return value;
+    }
+
+    public int updateUnrevealedAmount(Board board) {
+        int value = -board.getNBombs();
+        for (int i = 0; i < board.getNRows(); i++) {
+            for (int j = 0; j < board.getNColumns(); j++) {
+                if (board.getCells()[i][j].isHidden()) {
+                    value++;
+                }
+            }
+        }
+        board.setNumUnexposedRemaining(value);
+        return Math.max(value, 0);
+    }
 }

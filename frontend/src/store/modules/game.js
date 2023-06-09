@@ -6,7 +6,13 @@ export default {
     minesCountFrom: 0,
     minesCountTo: 0,
     board: null,
-    gameStatus: ''
+    gameStatus: '',
+    statistics: {
+      totalCountOfMines: 0,
+      currentCountOfFlags: 0,
+      maximumCountOfFlags: 0,
+      unrevealedAmount: 0
+    },
   },
   getters: {
     minesCountFrom(state) {
@@ -18,9 +24,12 @@ export default {
     board(state) {
       return state.board;
     },
-    getGameStatus(state){
+    getGameStatus(state) {
       return state.gameStatus;
-    }
+    },
+    getStatistic(state) {
+      return state.statistics;
+    },
   },
   mutations: {
     setMinesCountFrom(state, data) {
@@ -40,9 +49,34 @@ export default {
     },
     setGameStatus(state, data) {
       state.gameStatus = data
+    },
+    setStatistics(state, data) {
+      state.statistics.totalCountOfMines = data.totalCountOfMines
+      state.statistics.currentCountOfFlags = data.currentCountOfFlags
+      state.statistics.maximumCountOfFlags = data.maximumCountOfFlags
+      state.statistics.unrevealedAmount = data.unrevealedAmount
+    },
+    setCurrentCountOfFlags(state, data) {
+      state.statistics.currentCountOfFlags = data
     }
+    ,
+    setMaximumCountOfFlags(state, data) {
+      state.statistics.maximumCountOfFlags = data
+    }
+    ,
+    setTotalCountOfMines(state, data) {
+      state.statistics.totalCountOfMines = data
+    },
   },
   actions: {
+    resetStatistic(store) {
+      store.commit('setStatistics', {
+        totalCountOfMines: 0,
+        currentCountOfFlags: 0,
+        maximumCountOfFlags: 0,
+        unrevealedAmount: 0
+      });
+    },
     async calculateMinesCount(store, data) {
       try {
         const response = await axios.post('/backend/game/minesCount', data);
@@ -59,6 +93,9 @@ export default {
         const response = await axios.post('/backend/game/initiate', data);
         if (response.status === 200) {
           store.commit('setBoard', response.data);
+          store.dispatch('resetStatistic');
+          store.commit('setMaximumCountOfFlags', data.mines);
+          store.commit('setTotalCountOfMines', data.mines);
         }
       } catch (e) {
         console.log(e);
@@ -70,6 +107,7 @@ export default {
         if (response.status === 200) {
           store.commit('setBoard', response.data.cellResponse);
           store.commit('setGameStatus', response.data.gameStatus);
+          store.commit('setStatistics', response.data);
         }
       } catch (e) {
         console.log(e);
@@ -77,19 +115,21 @@ export default {
     },
     async setFlagged(store, data) {
       try {
-        await axios.patch('/backend/game/setFlagged', data);
+        const response = await axios.patch('/backend/game/setFlagged', data);
         store.commit('toggleBoardFlag', data);
+        store.commit('setCurrentCountOfFlags', response.data);
       } catch (e) {
         console.log(e);
       }
     },
     async showAll(store, data) {
       try {
-        const response =   await axios.post('/backend/game/showAll', data);
+        const response = await axios.post('/backend/game/showAll', data);
         if (response.status === 200) {
           debugger
           store.commit('setBoard', response.data.cellResponse);
           store.commit('setGameStatus', response.data.gameStatus);
+          store.commit('setStatistics', response.data);
         }
       } catch (e) {
         console.log(e);

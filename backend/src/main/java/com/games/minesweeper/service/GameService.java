@@ -42,15 +42,25 @@ public class GameService {
 
     public GameResponse revealCell(RevealCellRequest revealCellRequest) {
         openCell(revealCellRequest.getRow(), revealCellRequest.getColumn());
+        int currentCountOfFlags = boardService.getCurrentCountOfFlags(board);
+        int unrevealedAmount = boardService.updateUnrevealedAmount(board);
+        if (board.getNumUnexposedRemaining() == 0) {
+            gameStatus = GameStatus.WIN;
+        }
         return GameResponse
                 .builder()
                 .gameStatus(gameStatus)
+                .totalCountOfMines(board.getNBombs())
+                .currentCountOfFlags(currentCountOfFlags)
+                .maximumCountOfFlags(board.getNBombs())
+                .unrevealedAmount(unrevealedAmount)
                 .cellResponse(cellMapper.cellToCellResponse(board.getCells()))
                 .build();
     }
 
-    public void setFlagged(SetFlaggedRequest setFlaggedRequest) {
+    public int setFlagged(SetFlaggedRequest setFlaggedRequest) {
         board.getCells()[setFlaggedRequest.getRow()][setFlaggedRequest.getColumn()].setFlagged(setFlaggedRequest.isFlagged());
+        return boardService.getCurrentCountOfFlags(board);
     }
 
     public GameResponse showAll() {
@@ -59,9 +69,15 @@ public class GameService {
                 board.getCells()[i][j].setHidden(false);
             }
         }
+        int currentCountOfFlags = boardService.getCurrentCountOfFlags(board);
+        int unrevealedAmount = boardService.updateUnrevealedAmount(board);
         return GameResponse
                 .builder()
                 .gameStatus(gameStatus)
+                .totalCountOfMines(board.getNBombs())
+                .currentCountOfFlags(currentCountOfFlags)
+                .maximumCountOfFlags(board.getNBombs())
+                .unrevealedAmount(unrevealedAmount)
                 .cellResponse(cellMapper.cellToCellResponse(board.getCells()))
                 .build();
     }
@@ -86,9 +102,7 @@ public class GameService {
         } else {
             openAllBlankCells(board, cell);
         }
-        if (board.getNumUnexposedRemaining() == 0) {
-            gameStatus = GameStatus.WIN;
-        }
+
     }
 
     private void openAllBlankCells(Board board, Cell cell) {
@@ -109,17 +123,33 @@ public class GameService {
     }
 
     private void checkOtherSpots(Board board, int i, int j, Queue<Cell> cells, List<Cell> openedCells) {
+        if (i - 1 >= 0 && j - 1 >= 0) {
+            //checkTopLeftDiagonal
+            checkCellOnBlank(board, i - 1, j - 1, cells, openedCells);
+        }
         if (i - 1 >= 0) {
             //checkTop
             checkCellOnBlank(board, i - 1, j, cells, openedCells);
+        }
+        if (i - 1 >= 0 && j + 1 < board.getNColumns()) {
+            //checkTopRightDiagonal
+            checkCellOnBlank(board, i - 1, j + 1, cells, openedCells);
         }
         if (j + 1 < board.getNColumns()) {
             //checkRight
             checkCellOnBlank(board, i, j + 1, cells, openedCells);
         }
+        if (i + 1 < board.getNRows() && j + 1 < board.getNColumns()) {
+            //checkBottomRightDiagonal
+            checkCellOnBlank(board, i + 1, j + 1, cells, openedCells);
+        }
         if (i + 1 < board.getNRows()) {
             //checkBottom
             checkCellOnBlank(board, i + 1, j, cells, openedCells);
+        }
+        if (i + 1 < board.getNRows() && j - 1 >= 0) {
+            //checkLeftBottomDiagonal
+            checkCellOnBlank(board, i + 1, j - 1, cells, openedCells);
         }
         if (j - 1 >= 0) {
             //checkLeft

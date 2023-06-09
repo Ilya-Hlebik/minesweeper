@@ -8,6 +8,20 @@
         <game-settings v-if="!boardInitiated" @showBoard="onShowBoard">
         </game-settings>
         <div class="board" v-if="boardInitiated">
+          <a-layout-content>
+            <div class="big-blue-font">
+              Total Count Of Mines: {{getStatistic.totalCountOfMines}}
+            </div>
+            <div class="big-blue-font">
+              Current Count Of Flags {{getStatistic.currentCountOfFlags}}
+            </div>
+            <div class="big-blue-font">
+              Maximum Count Of Flags {{getStatistic.maximumCountOfFlags}}
+            </div>
+            <div class="big-blue-font">
+              Unrevealed Cells Amount {{getStatistic.unrevealedAmount}}
+            </div>
+          </a-layout-content>
           <div
             class="cell"
             v-for="(row, rowIndex) in this.getBoard"
@@ -22,8 +36,8 @@
                 'revealed': col.revealed,
                 'flagged': col.flagged,
               }"
-              @click="revealCell(rowIndex, colIndex, col.revealed, col.flagged)"
-              @contextmenu.prevent="toggleFlag(rowIndex, colIndex, col.flagged)"
+              @click="revealCell($event,rowIndex, colIndex, col.revealed, col.flagged)"
+              @contextmenu.prevent="toggleFlag(rowIndex, colIndex, col.revealed, col.flagged)"
             >
               {{ col.content }}
             </div>
@@ -60,19 +74,26 @@
     methods: {
       initializeBoard() {
       },
-      revealCell(rowIndex, colIndex, revealed, flagged) {
+      revealCell(event, rowIndex, colIndex, revealed, flagged) {
+        if (event.buttons === 2) {
+          console.log(1);
+        }
         if (!revealed && !flagged) {
           this.revealCellOnBoard({row: rowIndex, column: colIndex, revealed: revealed});
         }
         // Logic to reveal the clicked cell goes here
       },
-      toggleFlag(rowIndex, colIndex, flagged) {
-        this.setFlagged({row: rowIndex, column: colIndex, flagged: !flagged})
+      toggleFlag(rowIndex, colIndex, revealed, flagged) {
+        if (!revealed && (this.getStatistic.maximumCountOfFlags > this.getStatistic.currentCountOfFlags || flagged)) {
+          this.setFlagged({row: rowIndex, column: colIndex, flagged: !flagged})
+        }
         // Logic to toggle flag on the cell goes here
       },
       resetGame() {
         this.onShowBoard(false);
         this.setGameStatus('');
+        this.setBoard(null);
+        this.resetStatistic();
         // Logic to reset the game goes here
       },
       onShowBoard(value) {
@@ -81,17 +102,23 @@
       ...mapActions('game', {
         revealCellOnBoard: 'revealCell',
         setFlagged: 'setFlagged',
-        showAll: 'showAll'
+        showAll: 'showAll',
+        resetStatistic: 'resetStatistic'
       }),
       ...mapMutations('game', {
         toggleBoardFlag: 'toggleBoardFlag',
-        setGameStatus: 'setGameStatus'
+        setGameStatus: 'setGameStatus',
+        setBoard: 'setBoard',
       }),
+      bclick(){
+        console.log(1);
+      }
     },
     computed: {
       ...mapGetters('game', {
         getBoard: 'board',
-        getGameStatus: 'getGameStatus'
+        getGameStatus: 'getGameStatus',
+        getStatistic: 'getStatistic'
       }),
       updateGameStatus() {
         if (this.getGameStatus === 'WIN' || this.getGameStatus === 'LOSE') {
@@ -129,7 +156,6 @@
   .board {
     grid-template-columns: repeat(auto-fill, minmax(30px, 1fr));
     grid-gap: 2px;
-    max-width: 500px;
   }
 
   .cell {
@@ -168,10 +194,12 @@
     justify-content: center;
     align-items: center;
   }
+
   .big-red-font {
     font-size: 24px; /* Adjust the font size as needed */
     color: red;
   }
+
   .big-blue-font {
     font-size: 24px; /* Adjust the font size as needed */
     color: #0004ff;

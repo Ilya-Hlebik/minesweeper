@@ -34,8 +34,8 @@ public class GameController {
     }
 
     @PatchMapping(value = "/setFlagged")
-    public void setFlagged(@RequestBody SetFlaggedRequest setFlaggedRequest) {
-          gameService.setFlagged(setFlaggedRequest);
+    public int setFlagged(@RequestBody SetFlaggedRequest setFlaggedRequest) {
+        return gameService.setFlagged(setFlaggedRequest);
     }
 
     @PostMapping(value = "/showAll")
