@@ -67,6 +67,14 @@ export default {
     setTotalCountOfMines(state, data) {
       state.statistics.totalCountOfMines = data
     },
+    hideCellsOptions(state) {
+      for (let i = 0; i < state.board.length; i++) {
+        for (let j = 0; j < state.board[i].length; j++) {
+          state.board[i][j].highLighted = false;
+        }
+      }
+
+    }
   },
   actions: {
     resetStatistic(store) {
@@ -125,6 +133,19 @@ export default {
     async showAll(store, data) {
       try {
         const response = await axios.post('/backend/game/showAll', data);
+        if (response.status === 200) {
+          debugger
+          store.commit('setBoard', response.data.cellResponse);
+          store.commit('setGameStatus', response.data.gameStatus);
+          store.commit('setStatistics', response.data);
+        }
+      } catch (e) {
+        console.log(e);
+      }
+    },
+    async showCellsOptions(store, data) {
+      try {
+        const response = await axios.post('/backend/game/showCellsOptions', data);
         if (response.status === 200) {
           debugger
           store.commit('setBoard', response.data.cellResponse);

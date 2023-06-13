@@ -69,6 +69,10 @@ public class GameService {
                 board.getCells()[i][j].setHidden(false);
             }
         }
+        return getDefaultGameResponse();
+    }
+
+    private GameResponse getDefaultGameResponse() {
         int currentCountOfFlags = boardService.getCurrentCountOfFlags(board);
         int unrevealedAmount = boardService.updateUnrevealedAmount(board);
         return GameResponse
@@ -80,6 +84,18 @@ public class GameService {
                 .unrevealedAmount(unrevealedAmount)
                 .cellResponse(cellMapper.cellToCellResponse(board.getCells()))
                 .build();
+    }
+
+    public GameResponse showCellsOptions(RevealCellRequest revealCellRequest) {
+        int i =  revealCellRequest.getRow();
+        int j = revealCellRequest.getColumn();
+        if (i < 0 || i >= board.getNRows() || j < 0 || j >= board.getNColumns()
+                || (board.isInitialized() && (board.getCells()[i][j].isHidden() || board.getCells()[i][j].isFlagged() || board.getCells()[i][j].getCellType() != CellType.NUMBER))) {
+            System.out.println("Out of range, not revealed, flagged, or not a number");
+            return getDefaultGameResponse();
+        }
+
+        return getDefaultGameResponse();
     }
 
     private void openCell(int i, int j) {

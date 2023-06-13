@@ -35,8 +35,11 @@
                 'mine': col.mine,
                 'revealed': col.revealed,
                 'flagged': col.flagged,
+                'highLighted': col.highLighted,
               }"
               @click="revealCell($event,rowIndex, colIndex, col.revealed, col.flagged)"
+              @mousedown="mouseDownAction($event,rowIndex, colIndex, col.revealed, col.content)"
+              @mouseup="mouseUpAction"
               @contextmenu.prevent="toggleFlag(rowIndex, colIndex, col.revealed, col.flagged)"
             >
               {{ col.content }}
@@ -68,18 +71,20 @@
         boardInitiated: false
       }
     },
-    mounted() {
-      this.initializeBoard();
-    },
     methods: {
-      initializeBoard() {
+      mouseDownAction(event, rowIndex, colIndex, revealed, content) {
+        if (event.buttons === 3 && revealed && content !== '') {
+          this.showCellsOptions({row: rowIndex, column: colIndex})
+        }
+      },
+      mouseUpAction(event) {
+        if (event.buttons === 2) {
+        this.hideCellsOptions();
+        }
       },
       revealCell(event, rowIndex, colIndex, revealed, flagged) {
-        if (event.buttons === 2) {
-          console.log(1);
-        }
         if (!revealed && !flagged) {
-          this.revealCellOnBoard({row: rowIndex, column: colIndex, revealed: revealed});
+          this.revealCellOnBoard({row: rowIndex, column: colIndex});
         }
         // Logic to reveal the clicked cell goes here
       },
@@ -103,16 +108,15 @@
         revealCellOnBoard: 'revealCell',
         setFlagged: 'setFlagged',
         showAll: 'showAll',
-        resetStatistic: 'resetStatistic'
+        resetStatistic: 'resetStatistic',
+        showCellsOptions: 'showCellsOptions'
       }),
       ...mapMutations('game', {
         toggleBoardFlag: 'toggleBoardFlag',
         setGameStatus: 'setGameStatus',
         setBoard: 'setBoard',
+        hideCellsOptions: 'hideCellsOptions',
       }),
-      bclick(){
-        console.log(1);
-      }
     },
     computed: {
       ...mapGetters('game', {
@@ -170,6 +174,17 @@
     width: 30px;
     height: 30px;
     background-color: #bbb;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+  }
+
+  .inner-cell.highLighted {
+    border-style: solid;
+    width: 30px;
+    height: 30px;
+    background-color: #888;
     display: flex;
     justify-content: center;
     align-items: center;

@@ -42,4 +42,9 @@ public class GameController {
     public GameResponse showAll() {
         return gameService.showAll();
     }
+
+    @PostMapping(value = "/showCellsOptions")
+    public GameResponse showCellsOptions(@RequestBody RevealCellRequest revealCellRequest) {
+        return gameService.showCellsOptions(revealCellRequest);
+    }
 }

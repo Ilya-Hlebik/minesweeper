@@ -6,5 +6,4 @@ import lombok.Data;
 public class RevealCellRequest {
     private Integer row;
     private Integer column;
-    private boolean revealed;
 }
