@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.function.Function;
 
 @Service
 public class BoardService {
@@ -53,7 +54,7 @@ public class BoardService {
                 if (cell.isBomb()) {
                     continue;
                 }
-                int numberOfBombsAround = numberOfBombsAround(i, j, board);
+                int numberOfBombsAround = numberOfCellsByTypeAround(i, j, board, Cell::isBomb);
                 if (numberOfBombsAround > 0) {
                     cell.setCellType(CellType.NUMBER);
                     cell.setNumber(numberOfBombsAround);
@@ -62,46 +63,46 @@ public class BoardService {
         }
     }
 
-    private int numberOfBombsAround(int i, int j, Board board) {
-        int numberOfBombs = 0;
+    private int numberOfCellsByTypeAround(int i, int j, Board board, Function<Cell, Boolean> cellTypeFunction) {
+        int numberOfCellsByType = 0;
         if (i - 1 >= 0 && j - 1 >= 0) {
             //checkTopLeftDiagonal
-            numberOfBombs = updateNumberOfBombs(numberOfBombs, i - 1, j - 1, board);
+            numberOfCellsByType = updateNumberOfCellsByType(numberOfCellsByType, i - 1, j - 1, board, cellTypeFunction);
         }
         if (i - 1 >= 0) {
             //checkTop
-            numberOfBombs = updateNumberOfBombs(numberOfBombs, i - 1, j, board);
+            numberOfCellsByType = updateNumberOfCellsByType(numberOfCellsByType, i - 1, j, board, cellTypeFunction);
         }
         if (i - 1 >= 0 && j + 1 < board.getNColumns()) {
             //checkTopRightDiagonal
-            numberOfBombs = updateNumberOfBombs(numberOfBombs, i - 1, j + 1, board);
+            numberOfCellsByType = updateNumberOfCellsByType(numberOfCellsByType, i - 1, j + 1, board, cellTypeFunction);
         }
         if (j + 1 < board.getNColumns()) {
             //checkRight
-            numberOfBombs = updateNumberOfBombs(numberOfBombs, i, j + 1, board);
+            numberOfCellsByType = updateNumberOfCellsByType(numberOfCellsByType, i, j + 1, board, cellTypeFunction);
         }
         if (i + 1 < board.getNRows() && j + 1 < board.getNColumns()) {
             //checkBottomRightDiagonal
-            numberOfBombs = updateNumberOfBombs(numberOfBombs, i + 1, j + 1, board);
+            numberOfCellsByType = updateNumberOfCellsByType(numberOfCellsByType, i + 1, j + 1, board, cellTypeFunction);
         }
         if (i + 1 < board.getNRows()) {
             //checkBottom
-            numberOfBombs = updateNumberOfBombs(numberOfBombs, i + 1, j, board);
+            numberOfCellsByType = updateNumberOfCellsByType(numberOfCellsByType, i + 1, j, board, cellTypeFunction);
         }
         if (i + 1 < board.getNRows() && j - 1 >= 0) {
             //checkLeftBottomDiagonal
-            numberOfBombs = updateNumberOfBombs(numberOfBombs, i + 1, j - 1, board);
+            numberOfCellsByType = updateNumberOfCellsByType(numberOfCellsByType, i + 1, j - 1, board, cellTypeFunction);
         }
         if (j - 1 >= 0) {
             //checkLeft
-            numberOfBombs = updateNumberOfBombs(numberOfBombs, i, j - 1, board);
+            numberOfCellsByType = updateNumberOfCellsByType(numberOfCellsByType, i, j - 1, board, cellTypeFunction);
         }
-        return numberOfBombs;
+        return numberOfCellsByType;
     }
 
-    private int updateNumberOfBombs(int numberOfBombs, int i, int j, Board board) {
+    private int updateNumberOfCellsByType(int numberOfBombs, int i, int j, Board board, Function<Cell, Boolean> cellTypeFunction) {
         Cell cell = board.getCells()[i][j];
-        if (cell.isBomb()) {
+        if (cellTypeFunction.apply(cell)) {
             numberOfBombs++;
         }
         return numberOfBombs;
@@ -130,5 +131,11 @@ public class BoardService {
         }
         board.setNumUnexposedRemaining(value);
         return Math.max(value, 0);
+    }
+
+
+
+    public int getFlagsCountAround(Board board, int i, int j) {
+        return numberOfCellsByTypeAround(i,j, board, Cell::isFlagged);
     }
 }

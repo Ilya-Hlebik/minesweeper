@@ -55,7 +55,8 @@
       </a-layout-footer>
 
       <a-layout-footer class="footer" v-if="boardInitiated">
-        <button @click="resetGame">Reset</button>
+        <button class="mr-20" @click="resetGame">Reset</button>
+        <button class="mr-20" @click="resetGame">Restart</button>
       </a-layout-footer>
     </a-layout>
   </div>
@@ -68,18 +69,23 @@
   export default {
     data() {
       return {
-        boardInitiated: false
+        boardInitiated: false,
+        needShowCellsOptions: false
       }
     },
     methods: {
       mouseDownAction(event, rowIndex, colIndex, revealed, content) {
         if (event.buttons === 3 && revealed && content !== '') {
           this.showCellsOptions({row: rowIndex, column: colIndex})
+          this.needShowCellsOptions = true;
         }
       },
       mouseUpAction(event) {
-        if (event.buttons === 2) {
-        this.hideCellsOptions();
+        if (this.needShowCellsOptions) {
+          setTimeout(() => {
+            this.hideCellsOptions();
+            this.needShowCellsOptions = false;
+          }, 300);
         }
       },
       revealCell(event, rowIndex, colIndex, revealed, flagged) {
@@ -194,6 +200,7 @@
   .inner-cell.revealed {
     background-color: #eee;
     cursor: default;
+    user-select: none;
   }
 
   .inner-cell.mine {
@@ -208,6 +215,10 @@
     display: flex;
     justify-content: center;
     align-items: center;
+  }
+
+  .mr-20 {
+    margin: 20px;
   }
 
   .big-red-font {

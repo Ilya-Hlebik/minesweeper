@@ -10,6 +10,7 @@ public class Cell {
     private boolean hidden = true;
     private int number;
     private boolean flagged = false;
+    private boolean highlighted = false;
 
     public Cell(int row, int column, CellType cellType) {
         this.row = row;

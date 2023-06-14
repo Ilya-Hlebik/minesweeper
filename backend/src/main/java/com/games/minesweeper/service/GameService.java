@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.function.BiConsumer;
 
 @Service
 @RequiredArgsConstructor
@@ -87,15 +88,34 @@ public class GameService {
     }
 
     public GameResponse showCellsOptions(RevealCellRequest revealCellRequest) {
-        int i =  revealCellRequest.getRow();
+        int i = revealCellRequest.getRow();
         int j = revealCellRequest.getColumn();
         if (i < 0 || i >= board.getNRows() || j < 0 || j >= board.getNColumns()
                 || (board.isInitialized() && (board.getCells()[i][j].isHidden() || board.getCells()[i][j].isFlagged() || board.getCells()[i][j].getCellType() != CellType.NUMBER))) {
             System.out.println("Out of range, not revealed, flagged, or not a number");
             return getDefaultGameResponse();
         }
-
-        return getDefaultGameResponse();
+        Cell cell = board.getCells()[i][j];
+        int number = cell.getNumber();
+        int flagsCount = boardService.getFlagsCountAround(board, i, j);
+        if (number == flagsCount) {
+            openCell(i - 1, j - 1);
+            openCell(i - 1, j);
+            openCell(i - 1, j + 1);
+            openCell(i, j + 1);
+            openCell(i + 1, j + 1);
+            openCell(i + 1, j);
+            openCell(i + 1, j - 1);
+            openCell(i, j - 1);
+        } else {
+            checkOtherSpots(board, i, j, (argI, argJ) -> updateHighlightForUnrevealedCell(board.getCells()[argI][argJ]));
+        }
+        if (board.getNumUnexposedRemaining() == 0 && gameStatus != GameStatus.LOSE) {
+            gameStatus = GameStatus.WIN;
+        }
+        GameResponse defaultGameResponse = getDefaultGameResponse();
+        checkOtherSpots(board, i, j, (argI, argJ) -> updateHighlightForUnrevealedCell(board.getCells()[argI][argJ]));
+        return defaultGameResponse;
     }
 
     private void openCell(int i, int j) {
@@ -118,7 +138,6 @@ public class GameService {
         } else {
             openAllBlankCells(board, cell);
         }
-
     }
 
     private void openAllBlankCells(Board board, Cell cell) {
@@ -132,52 +151,57 @@ public class GameService {
             int j = poll.getRow();
             poll.setHidden(false);
             if (poll.isBlank()) {
-                checkOtherSpots(board, i, j, cells, openedCells);
+                checkOtherSpots(board, i, j, (argI, argJ) -> checkCellOnBlank(board.getCells()[argI][argJ], cells, openedCells));
             }
         }
         openedCells.stream().distinct().filter(cell1 -> !cell1.isHidden()).forEach(cell1 -> board.decreaseNumUnexposedRemaining());
     }
 
-    private void checkOtherSpots(Board board, int i, int j, Queue<Cell> cells, List<Cell> openedCells) {
+    private void checkOtherSpots(Board board, int i, int j, BiConsumer<Integer, Integer> biConsumer) {
         if (i - 1 >= 0 && j - 1 >= 0) {
             //checkTopLeftDiagonal
-            checkCellOnBlank(board, i - 1, j - 1, cells, openedCells);
+            biConsumer.accept(i - 1, j - 1);
         }
         if (i - 1 >= 0) {
             //checkTop
-            checkCellOnBlank(board, i - 1, j, cells, openedCells);
+            biConsumer.accept(i - 1, j);
         }
         if (i - 1 >= 0 && j + 1 < board.getNColumns()) {
             //checkTopRightDiagonal
-            checkCellOnBlank(board, i - 1, j + 1, cells, openedCells);
+            biConsumer.accept(i - 1, j + 1);
         }
         if (j + 1 < board.getNColumns()) {
             //checkRight
-            checkCellOnBlank(board, i, j + 1, cells, openedCells);
+            biConsumer.accept(i, j + 1);
         }
         if (i + 1 < board.getNRows() && j + 1 < board.getNColumns()) {
             //checkBottomRightDiagonal
-            checkCellOnBlank(board, i + 1, j + 1, cells, openedCells);
+            biConsumer.accept(i + 1, j + 1);
         }
         if (i + 1 < board.getNRows()) {
             //checkBottom
-            checkCellOnBlank(board, i + 1, j, cells, openedCells);
+            biConsumer.accept(i + 1, j);
         }
         if (i + 1 < board.getNRows() && j - 1 >= 0) {
             //checkLeftBottomDiagonal
-            checkCellOnBlank(board, i + 1, j - 1, cells, openedCells);
+            biConsumer.accept(i + 1, j - 1);
         }
         if (j - 1 >= 0) {
             //checkLeft
-            checkCellOnBlank(board, i, j - 1, cells, openedCells);
+            biConsumer.accept(i, j - 1);
         }
     }
 
-    private void checkCellOnBlank(Board board, int i, int j, Queue<Cell> cells, List<Cell> openedCells) {
-        Cell cell = board.getCells()[i][j];
+    private void checkCellOnBlank(Cell cell, Queue<Cell> cells, List<Cell> openedCells) {
         if (!openedCells.contains(cell) && (cell.isBlank() || !cell.isBomb())) {
             cells.add(cell);
             openedCells.add(cell);
+        }
+    }
+
+    public void updateHighlightForUnrevealedCell(Cell cell) {
+        if (cell.isHidden() && !cell.isFlagged()) {
+            cell.setHighlighted(!cell.isHighlighted());
         }
     }
 }

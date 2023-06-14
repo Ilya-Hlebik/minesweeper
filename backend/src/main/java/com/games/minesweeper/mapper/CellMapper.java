@@ -12,14 +12,14 @@ public class CellMapper {
             for (int j = 0; j < cells[i].length; j++) {
                 boolean revealed = !cells[i][j].isHidden();
                 boolean flagged = cells[i][j].isFlagged();
+                boolean highlighted = cells[i][j].isHighlighted();
                 if (revealed) {
                     boolean bomb = cells[i][j].isBomb();
                     int value = cells[i][j].getNumber();
                     String content = value == 0 ? "" : String.valueOf(value);
-                    cellResponse[i][j] = new CellResponse(bomb, true, flagged, content);
+                    cellResponse[i][j] = new CellResponse(bomb, true, flagged, content, highlighted);
                 } else {
-
-                    cellResponse[i][j] = new CellResponse(false, false, flagged, "");
+                    cellResponse[i][j] = new CellResponse(false, false, flagged, "", highlighted);
                 }
             }
         }
