@@ -13,6 +13,9 @@ export default {
       maximumCountOfFlags: 0,
       unrevealedAmount: 0
     },
+    rows: '',
+    columns: '',
+    mines: '',
   },
   getters: {
     minesCountFrom(state) {
@@ -30,6 +33,15 @@ export default {
     getStatistic(state) {
       return state.statistics;
     },
+    getRows(state) {
+      return state.rows;
+    },
+    getColumns(state) {
+      return state.columns;
+    },
+    getMines(state) {
+      return state.mines;
+    }
   },
   mutations: {
     setMinesCountFrom(state, data) {
@@ -74,6 +86,11 @@ export default {
         }
       }
 
+    },
+    setGameSettings(state, data) {
+      state.rows = data.rows;
+      state.columns = data.columns;
+      state.mines = data.mines;
     }
   },
   actions: {
@@ -98,6 +115,7 @@ export default {
     },
     async initiateBoard(store, data) {
       try {
+        store.commit('setGameSettings', data);
         const response = await axios.post('/backend/game/initiate', data);
         if (response.status === 200) {
           store.commit('setBoard', response.data);

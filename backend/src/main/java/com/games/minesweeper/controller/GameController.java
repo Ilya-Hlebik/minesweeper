@@ -4,7 +4,6 @@ import com.games.minesweeper.dto.request.BoardInitiateRequest;
 import com.games.minesweeper.dto.request.MinesCountRequest;
 import com.games.minesweeper.dto.request.RevealCellRequest;
 import com.games.minesweeper.dto.request.SetFlaggedRequest;
-import com.games.minesweeper.dto.response.CellResponse;
 import com.games.minesweeper.dto.response.GameResponse;
 import com.games.minesweeper.dto.response.MinesCountResponse;
 import com.games.minesweeper.service.GameService;
@@ -24,7 +23,7 @@ public class GameController {
     }
 
     @PostMapping(value = "/initiate")
-    public CellResponse[][] initiateBoard(@RequestBody BoardInitiateRequest minesCountRequest) {
+    public GameResponse initiateBoard(@RequestBody BoardInitiateRequest minesCountRequest) {
         return gameService.initiateBoard(minesCountRequest);
     }
 

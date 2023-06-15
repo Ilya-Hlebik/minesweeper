@@ -10,6 +10,7 @@ import com.games.minesweeper.dto.request.SetFlaggedRequest;
 import com.games.minesweeper.dto.response.CellResponse;
 import com.games.minesweeper.dto.response.GameResponse;
 import com.games.minesweeper.mapper.CellMapper;
+import com.games.minesweeper.repository.BoardRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -24,12 +25,14 @@ import java.util.function.BiConsumer;
 public class GameService {
     private final BoardService boardService;
     private final CellMapper cellMapper;
+    private final BoardRepository boardRepository;
 
     public static Board board;
     private GameStatus gameStatus;
 
-    public CellResponse[][] initiateBoard(BoardInitiateRequest minesCountRequest) {
+    public GameResponse initiateBoard(BoardInitiateRequest minesCountRequest) {
         board = new Board(minesCountRequest.getRows(), minesCountRequest.getColumns(), minesCountRequest.getMines());
+        com.games.minesweeper.dbo.Board boardToSave = new com.games.minesweeper.dbo.Board(minesCountRequest.getRows(), minesCountRequest.getColumns(), minesCountRequest.getMines());
         gameStatus = GameStatus.IN_PLAY;
         board.setCells(new Cell[minesCountRequest.getRows()][minesCountRequest.getColumns()]);
         CellResponse[][] cellResponse = new CellResponse[minesCountRequest.getRows()][minesCountRequest.getColumns()];
@@ -38,7 +41,11 @@ public class GameService {
                 cellResponse[i][j] = new CellResponse();
             }
         }
-        return cellResponse;
+        boardRepository.save(boardToSave);
+        return GameResponse
+                .builder()
+                .cellResponse(cellResponse)
+                .build();
     }
 
     public GameResponse revealCell(RevealCellRequest revealCellRequest) {

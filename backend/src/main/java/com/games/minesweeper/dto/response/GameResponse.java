@@ -13,4 +13,5 @@ public class GameResponse {
     private int currentCountOfFlags;
     private int maximumCountOfFlags;
     private int unrevealedAmount;
+    private String gameId;
 }

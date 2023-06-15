@@ -8,20 +8,7 @@
         <game-settings v-if="!boardInitiated" @showBoard="onShowBoard">
         </game-settings>
         <div class="board" v-if="boardInitiated">
-          <a-layout-content>
-            <div class="big-blue-font">
-              Total Count Of Mines: {{getStatistic.totalCountOfMines}}
-            </div>
-            <div class="big-blue-font">
-              Current Count Of Flags {{getStatistic.currentCountOfFlags}}
-            </div>
-            <div class="big-blue-font">
-              Maximum Count Of Flags {{getStatistic.maximumCountOfFlags}}
-            </div>
-            <div class="big-blue-font">
-              Unrevealed Cells Amount {{getStatistic.unrevealedAmount}}
-            </div>
-          </a-layout-content>
+          <statistics></statistics>
           <div
             class="cell"
             v-for="(row, rowIndex) in this.getBoard"
@@ -54,9 +41,9 @@
               }">{{getGameStatus}}</span>
       </a-layout-footer>
 
-      <a-layout-footer class="footer" v-if="boardInitiated">
+      <a-layout-footer class="footer" v-show="boardInitiated">
         <button class="mr-20" @click="resetGame">Reset</button>
-        <button class="mr-20" @click="resetGame">Restart</button>
+        <button class="mr-20" @click="restartGame">Restart</button>
       </a-layout-footer>
     </a-layout>
   </div>
@@ -65,6 +52,7 @@
 <script>
   import {mapActions, mapGetters, mapMutations} from 'vuex';
   import GameSettings from "./GameSettings";
+  import Statistics from "./Statistics";
 
   export default {
     data() {
@@ -80,7 +68,7 @@
           this.needShowCellsOptions = true;
         }
       },
-      mouseUpAction(event) {
+      mouseUpAction() {
         if (this.needShowCellsOptions) {
           setTimeout(() => {
             this.hideCellsOptions();
@@ -107,6 +95,12 @@
         this.resetStatistic();
         // Logic to reset the game goes here
       },
+      restartGame() {
+        this.setGameStatus('');
+        this.setBoard(null);
+        this.resetStatistic();
+        this.initiateBoard(({rows: this.getRows, columns: this.getColumns, mines: this.getMines}));
+      },
       onShowBoard(value) {
         this.boardInitiated = value
       },
@@ -115,7 +109,8 @@
         setFlagged: 'setFlagged',
         showAll: 'showAll',
         resetStatistic: 'resetStatistic',
-        showCellsOptions: 'showCellsOptions'
+        showCellsOptions: 'showCellsOptions',
+        initiateBoard: 'initiateBoard'
       }),
       ...mapMutations('game', {
         toggleBoardFlag: 'toggleBoardFlag',
@@ -128,7 +123,10 @@
       ...mapGetters('game', {
         getBoard: 'board',
         getGameStatus: 'getGameStatus',
-        getStatistic: 'getStatistic'
+        getStatistic: 'getStatistic',
+        getRows: 'getRows',
+        getColumns: 'getColumns',
+        getMines: 'getMines'
       }),
       updateGameStatus() {
         if (this.getGameStatus === 'WIN' || this.getGameStatus === 'LOSE') {
@@ -139,7 +137,7 @@
       }
     },
     components: {
-      GameSettings
+      GameSettings, Statistics
     }
   }
 </script>
@@ -173,6 +171,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    height: 30px;
   }
 
   .inner-cell {
