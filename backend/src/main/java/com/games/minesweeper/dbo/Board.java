@@ -1,6 +1,5 @@
 package com.games.minesweeper.dbo;
 
-import com.games.minesweeper.dto.CellType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -22,7 +21,7 @@ public class Board extends AbstractEntity {
     private int nColumns;
     private int nBombs = 0;
     @DBRef
-    private List<List<Cell>> cells;
+    private CellGrid cellGrid;
     @Transient
     private final List<Cell> shuffledCells = new ArrayList<>();
     private int numUnexposedRemaining;
@@ -33,23 +32,10 @@ public class Board extends AbstractEntity {
         this.nColumns = nColumns;
         this.nBombs = nBombs;
         numUnexposedRemaining = nRows * nColumns - nBombs;
-        initializeCells();
     }
 
     public void decreaseNumUnexposedRemaining() {
         numUnexposedRemaining--;
-    }
-
-    private void initializeCells() {
-        cells = new ArrayList<>(nRows);
-        for (int i = 0; i < nRows; i++) {
-            List<Cell> row = new ArrayList<>(nColumns);
-            for (int j = 0; j < nColumns; j++) {
-                Cell cell = new Cell(i, j, CellType.BLANK);
-                row.add(cell);
-            }
-            cells.add(row);
-        }
     }
 }
 

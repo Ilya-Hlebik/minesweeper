@@ -16,6 +16,7 @@ export default {
     rows: '',
     columns: '',
     mines: '',
+    gameId: ''
   },
   getters: {
     minesCountFrom(state) {
@@ -41,6 +42,9 @@ export default {
     },
     getMines(state) {
       return state.mines;
+    },
+    getGameId(state){
+      return stage.gameId;
     }
   },
   mutations: {
@@ -91,6 +95,9 @@ export default {
       state.rows = data.rows;
       state.columns = data.columns;
       state.mines = data.mines;
+    },
+    setGameId(state, data){
+      state.gameId = data;
     }
   },
   actions: {
@@ -118,7 +125,8 @@ export default {
         store.commit('setGameSettings', data);
         const response = await axios.post('/backend/game/initiate', data);
         if (response.status === 200) {
-          store.commit('setBoard', response.data);
+          store.commit('setBoard', response.data.cellResponse);
+          store.commit('setGameId', response.data.gameId);
           store.dispatch('resetStatistic');
           store.commit('setMaximumCountOfFlags', data.mines);
           store.commit('setTotalCountOfMines', data.mines);
@@ -129,7 +137,7 @@ export default {
     },
     async revealCell(store, data) {
       try {
-        const response = await axios.post('/backend/game/revealCell', data);
+        const response = await axios.post('/backend/game/revealCell', {...data, gameId: store.state.gameId});
         if (response.status === 200) {
           store.commit('setBoard', response.data.cellResponse);
           store.commit('setGameStatus', response.data.gameStatus);
@@ -141,7 +149,7 @@ export default {
     },
     async setFlagged(store, data) {
       try {
-        const response = await axios.patch('/backend/game/setFlagged', data);
+        const response = await axios.patch('/backend/game/setFlagged', {...data, gameId: store.state.gameId});
         store.commit('toggleBoardFlag', data);
         store.commit('setCurrentCountOfFlags', response.data);
       } catch (e) {
@@ -150,7 +158,7 @@ export default {
     },
     async showAll(store, data) {
       try {
-        const response = await axios.post('/backend/game/showAll', data);
+        const response = await axios.post('/backend/game/showAll', {...data, gameId: store.state.gameId});
         if (response.status === 200) {
           debugger
           store.commit('setBoard', response.data.cellResponse);
@@ -163,7 +171,7 @@ export default {
     },
     async showCellsOptions(store, data) {
       try {
-        const response = await axios.post('/backend/game/showCellsOptions', data);
+        const response = await axios.post('/backend/game/showCellsOptions', {...data, gameId: store.state.gameId});
         if (response.status === 200) {
           debugger
           store.commit('setBoard', response.data.cellResponse);

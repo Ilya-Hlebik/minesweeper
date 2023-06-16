@@ -1,10 +1,11 @@
 package com.games.minesweeper.service;
 
-import com.games.minesweeper.dto.Board;
-import com.games.minesweeper.dto.Cell;
+import com.games.minesweeper.dbo.Board;
+import com.games.minesweeper.dbo.Cell;
 import com.games.minesweeper.dto.CellType;
 import org.springframework.stereotype.Service;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.function.Function;
@@ -40,9 +41,9 @@ public class BoardService {
         Iterator<Cell> iterator = board.getShuffledCells().iterator();
         for (int i = 0; i < board.getNRows(); i++) {
             for (int j = 0; j < board.getNColumns(); j++) {
-                board.getCells()[i][j] = iterator.next(); //?
-                board.getCells()[i][j].setColumn(i);
-                board.getCells()[i][j].setRow(j);
+                board.getCellGrid().getCells().get(i).set(j, iterator.next()); //?
+                board.getCellGrid().getCells().get(i).get(j).setColumn(i);
+                board.getCellGrid().getCells().get(i).get(j).setRow(j);
             }
         }
     }
@@ -50,7 +51,7 @@ public class BoardService {
     private void setNumberedCells(Board board) {
         for (int i = 0; i < board.getNRows(); i++) {
             for (int j = 0; j < board.getNColumns(); j++) {
-                Cell cell = board.getCells()[i][j];
+                Cell cell = board.getCellGrid().getCells().get(i).get(j);
                 if (cell.isBomb()) {
                     continue;
                 }
@@ -101,7 +102,7 @@ public class BoardService {
     }
 
     private int updateNumberOfCellsByType(int numberOfBombs, int i, int j, Board board, Function<Cell, Boolean> cellTypeFunction) {
-        Cell cell = board.getCells()[i][j];
+        Cell cell = board.getCellGrid().getCells().get(i).get(j);
         if (cellTypeFunction.apply(cell)) {
             numberOfBombs++;
         }
@@ -109,33 +110,27 @@ public class BoardService {
     }
 
     public int getCurrentCountOfFlags(Board board) {
-        int value = 0;
-        for (int i = 0; i < board.getNRows(); i++) {
-            for (int j = 0; j < board.getNColumns(); j++) {
-                if (board.getCells()[i][j].isFlagged()) {
-                    value++;
-                }
-            }
-        }
-        return value;
+        return (int) board.getCellGrid()
+                .getCells()
+                .stream()
+                .flatMap(Collection::stream)
+                .filter(Cell::isFlagged)
+                .count();
     }
 
     public int updateUnrevealedAmount(Board board) {
-        int value = -board.getNBombs();
-        for (int i = 0; i < board.getNRows(); i++) {
-            for (int j = 0; j < board.getNColumns(); j++) {
-                if (board.getCells()[i][j].isHidden()) {
-                    value++;
-                }
-            }
-        }
+        int value = (int) (board.getCellGrid()
+                .getCells()
+                .stream()
+                .flatMap(Collection::stream)
+                .filter(Cell::isHidden)
+                .count() - board.getNBombs());
         board.setNumUnexposedRemaining(value);
         return Math.max(value, 0);
     }
 
 
-
     public int getFlagsCountAround(Board board, int i, int j) {
-        return numberOfCellsByTypeAround(i,j, board, Cell::isFlagged);
+        return numberOfCellsByTypeAround(i, j, board, Cell::isFlagged);
     }
 }

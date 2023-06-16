@@ -3,16 +3,12 @@ package com.games.minesweeper.dbo;
 import com.games.minesweeper.dto.CellType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document(collection = "CELL")
 @Data
-@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class Cell extends AbstractEntity {
+public class Cell {
     private int row;
     private int column;
     private CellType cellType;

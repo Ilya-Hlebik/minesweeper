@@ -38,8 +38,8 @@ public class GameController {
     }
 
     @PostMapping(value = "/showAll")
-    public GameResponse showAll() {
-        return gameService.showAll();
+    public GameResponse showAll(@RequestBody String gameId) {
+        return gameService.showAll(gameId);
     }
 
     @PostMapping(value = "/showCellsOptions")

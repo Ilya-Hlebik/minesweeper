@@ -1,7 +1,8 @@
 package com.games.minesweeper.service;
 
-import com.games.minesweeper.dto.Board;
-import com.games.minesweeper.dto.Cell;
+import com.games.minesweeper.dbo.Board;
+import com.games.minesweeper.dbo.Cell;
+import com.games.minesweeper.dbo.CellGrid;
 import com.games.minesweeper.dto.CellType;
 import com.games.minesweeper.dto.GameStatus;
 import com.games.minesweeper.dto.request.BoardInitiateRequest;
@@ -11,8 +12,10 @@ import com.games.minesweeper.dto.response.CellResponse;
 import com.games.minesweeper.dto.response.GameResponse;
 import com.games.minesweeper.mapper.CellMapper;
 import com.games.minesweeper.repository.BoardRepository;
+import com.games.minesweeper.repository.CellGridRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -26,63 +29,73 @@ public class GameService {
     private final BoardService boardService;
     private final CellMapper cellMapper;
     private final BoardRepository boardRepository;
+    private final CellGridRepository cellGridRepository;
 
-    public static Board board;
     private GameStatus gameStatus;
 
+    @Transactional
     public GameResponse initiateBoard(BoardInitiateRequest minesCountRequest) {
-        board = new Board(minesCountRequest.getRows(), minesCountRequest.getColumns(), minesCountRequest.getMines());
-        com.games.minesweeper.dbo.Board boardToSave = new com.games.minesweeper.dbo.Board(minesCountRequest.getRows(), minesCountRequest.getColumns(), minesCountRequest.getMines());
+        Board boardToSave = new Board(minesCountRequest.getRows(), minesCountRequest.getColumns(), minesCountRequest.getMines());
         gameStatus = GameStatus.IN_PLAY;
-        board.setCells(new Cell[minesCountRequest.getRows()][minesCountRequest.getColumns()]);
         CellResponse[][] cellResponse = new CellResponse[minesCountRequest.getRows()][minesCountRequest.getColumns()];
+        List<List<Cell>> cells = new ArrayList<>();
         for (int i = 0; i < minesCountRequest.getRows(); i++) {
+            List<Cell> row = new ArrayList<>();
             for (int j = 0; j < minesCountRequest.getColumns(); j++) {
                 cellResponse[i][j] = new CellResponse();
+                Cell cell = new Cell(i, j, CellType.BLANK);
+                row.add(cell);
             }
+            cells.add(row);
         }
-        boardRepository.save(boardToSave);
+        CellGrid cellGrid = cellGridRepository.save(new CellGrid(cells));
+        boardToSave.setCellGrid(cellGrid);
+        Board saveBoard = boardRepository.save(boardToSave);
         return GameResponse
                 .builder()
                 .cellResponse(cellResponse)
+                .gameId(saveBoard.getId())
                 .build();
     }
 
+    @Transactional
     public GameResponse revealCell(RevealCellRequest revealCellRequest) {
-        openCell(revealCellRequest.getRow(), revealCellRequest.getColumn());
+        Board board = boardRepository.findById(revealCellRequest.getGameId()).orElseThrow();
+        openCell(revealCellRequest.getRow(), revealCellRequest.getColumn(), board);
         int currentCountOfFlags = boardService.getCurrentCountOfFlags(board);
         int unrevealedAmount = boardService.updateUnrevealedAmount(board);
         if (board.getNumUnexposedRemaining() == 0) {
             gameStatus = GameStatus.WIN;
         }
-        return GameResponse
-                .builder()
-                .gameStatus(gameStatus)
-                .totalCountOfMines(board.getNBombs())
-                .currentCountOfFlags(currentCountOfFlags)
-                .maximumCountOfFlags(board.getNBombs())
-                .unrevealedAmount(unrevealedAmount)
-                .cellResponse(cellMapper.cellToCellResponse(board.getCells()))
-                .build();
+        boardRepository.save(board);
+        return getGameResponse(board, currentCountOfFlags, unrevealedAmount);
     }
 
+    @Transactional
     public int setFlagged(SetFlaggedRequest setFlaggedRequest) {
-        board.getCells()[setFlaggedRequest.getRow()][setFlaggedRequest.getColumn()].setFlagged(setFlaggedRequest.isFlagged());
+        Board board = boardRepository.findById(setFlaggedRequest.getGameId()).orElseThrow();
+        board.getCellGrid().getCells().get(setFlaggedRequest.getRow()).get(setFlaggedRequest.getColumn()).setFlagged(setFlaggedRequest.isFlagged());
         return boardService.getCurrentCountOfFlags(board);
     }
 
-    public GameResponse showAll() {
+    @Transactional
+    public GameResponse showAll(String gameId) {
+        Board board = boardRepository.findById(gameId).orElseThrow();
         for (int i = 0; i < board.getNRows(); i++) {
             for (int j = 0; j < board.getNColumns(); j++) {
-                board.getCells()[i][j].setHidden(false);
+                board.getCellGrid().getCells().get(i).get(j).setHidden(false);
             }
         }
-        return getDefaultGameResponse();
+        return getDefaultGameResponse(board);
     }
 
-    private GameResponse getDefaultGameResponse() {
+    private GameResponse getDefaultGameResponse(Board board) {
         int currentCountOfFlags = boardService.getCurrentCountOfFlags(board);
         int unrevealedAmount = boardService.updateUnrevealedAmount(board);
+        return getGameResponse(board, currentCountOfFlags, unrevealedAmount);
+    }
+
+    private GameResponse getGameResponse(Board board, int currentCountOfFlags, int unrevealedAmount) {
         return GameResponse
                 .builder()
                 .gameStatus(gameStatus)
@@ -90,50 +103,53 @@ public class GameService {
                 .currentCountOfFlags(currentCountOfFlags)
                 .maximumCountOfFlags(board.getNBombs())
                 .unrevealedAmount(unrevealedAmount)
-                .cellResponse(cellMapper.cellToCellResponse(board.getCells()))
+                .gameId(board.getId())
+                .cellResponse(cellMapper.cellToCellResponse(board.getCellGrid().getCells()))
                 .build();
     }
 
+    @Transactional
     public GameResponse showCellsOptions(RevealCellRequest revealCellRequest) {
+        Board board = boardRepository.findById(revealCellRequest.getGameId()).orElseThrow();
         int i = revealCellRequest.getRow();
         int j = revealCellRequest.getColumn();
         if (i < 0 || i >= board.getNRows() || j < 0 || j >= board.getNColumns()
-                || (board.isInitialized() && (board.getCells()[i][j].isHidden() || board.getCells()[i][j].isFlagged() || board.getCells()[i][j].getCellType() != CellType.NUMBER))) {
+                || (board.isInitialized() && (board.getCellGrid().getCells().get(i).get(j).isHidden() || board.getCellGrid().getCells().get(i).get(j).isFlagged() || board.getCellGrid().getCells().get(i).get(j).getCellType() != CellType.NUMBER))) {
             System.out.println("Out of range, not revealed, flagged, or not a number");
-            return getDefaultGameResponse();
+            return getDefaultGameResponse(board);
         }
-        Cell cell = board.getCells()[i][j];
+        Cell cell = board.getCellGrid().getCells().get(i).get(j);
         int number = cell.getNumber();
         int flagsCount = boardService.getFlagsCountAround(board, i, j);
         if (number == flagsCount) {
-            openCell(i - 1, j - 1);
-            openCell(i - 1, j);
-            openCell(i - 1, j + 1);
-            openCell(i, j + 1);
-            openCell(i + 1, j + 1);
-            openCell(i + 1, j);
-            openCell(i + 1, j - 1);
-            openCell(i, j - 1);
+            openCell(i - 1, j - 1, board);
+            openCell(i - 1, j, board);
+            openCell(i - 1, j + 1, board);
+            openCell(i, j + 1, board);
+            openCell(i + 1, j + 1, board);
+            openCell(i + 1, j, board);
+            openCell(i + 1, j - 1, board);
+            openCell(i, j - 1, board);
         } else {
-            checkOtherSpots(board, i, j, (argI, argJ) -> updateHighlightForUnrevealedCell(board.getCells()[argI][argJ]));
+            checkOtherSpots(board, i, j, (argI, argJ) -> updateHighlightForUnrevealedCell(board.getCellGrid().getCells().get(argI).get(argJ)));
         }
         if (board.getNumUnexposedRemaining() == 0 && gameStatus != GameStatus.LOSE) {
             gameStatus = GameStatus.WIN;
         }
-        GameResponse defaultGameResponse = getDefaultGameResponse();
-        checkOtherSpots(board, i, j, (argI, argJ) -> updateHighlightForUnrevealedCell(board.getCells()[argI][argJ]));
+        GameResponse defaultGameResponse = getDefaultGameResponse(board);
+        checkOtherSpots(board, i, j, (argI, argJ) -> updateHighlightForUnrevealedCell(board.getCellGrid().getCells().get(argI).get(argJ)));
         return defaultGameResponse;
     }
 
-    private void openCell(int i, int j) {
-        if (i < 0 || i >= board.getNRows() || j < 0 || j >= board.getNColumns() || (board.isInitialized() && (!board.getCells()[i][j].isHidden() || board.getCells()[i][j].isFlagged()))) {
+    private void openCell(int i, int j, com.games.minesweeper.dbo.Board board) {
+        if (i < 0 || i >= board.getNRows() || j < 0 || j >= board.getNColumns() || (board.isInitialized() && (!board.getCellGrid().getCells().get(i).get(j).isHidden() || board.getCellGrid().getCells().get(i).get(j).isFlagged()))) {
             System.out.println("Out of range or already open");
             return;
         }
         if (!board.isInitialized()) {
             boardService.init(i, j, board);
         }
-        Cell cell = board.getCells()[i][j];
+        Cell cell = board.getCellGrid().getCells().get(i).get(j);
         if (cell.isBomb()) {
             cell.setHidden(false);
             System.out.println("You hit the bomb!");
@@ -158,7 +174,7 @@ public class GameService {
             int j = poll.getRow();
             poll.setHidden(false);
             if (poll.isBlank()) {
-                checkOtherSpots(board, i, j, (argI, argJ) -> checkCellOnBlank(board.getCells()[argI][argJ], cells, openedCells));
+                checkOtherSpots(board, i, j, (argI, argJ) -> checkCellOnBlank(board.getCellGrid().getCells().get(argI).get(argJ), cells, openedCells));
             }
         }
         openedCells.stream().distinct().filter(cell1 -> !cell1.isHidden()).forEach(cell1 -> board.decreaseNumUnexposedRemaining());
