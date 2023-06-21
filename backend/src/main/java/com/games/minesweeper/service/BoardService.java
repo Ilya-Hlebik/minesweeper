@@ -2,22 +2,62 @@ package com.games.minesweeper.service;
 
 import com.games.minesweeper.dbo.Board;
 import com.games.minesweeper.dbo.Cell;
+import com.games.minesweeper.dbo.CellGrid;
 import com.games.minesweeper.dto.CellType;
+import com.games.minesweeper.repository.BoardRepository;
+import com.games.minesweeper.repository.CellGridRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
+import java.util.*;
 import java.util.function.Function;
 
 @Service
+@RequiredArgsConstructor
 public class BoardService {
+    private final CellGridRepository cellGridRepository;
+    private final BoardRepository boardRepository;
 
     public void init(int i, int j, Board board) {
         initializeBoard(board);
         shuffleBoard(i, j, board);
         setNumberedCells(board);
+        setInitialized(board);
+    }
+
+    public int getCurrentCountOfFlags(Board board) {
+        return (int) board.getCellGrid()
+                .getCells()
+                .stream()
+                .flatMap(Collection::stream)
+                .filter(Cell::isFlagged)
+                .count();
+    }
+
+    public int updateUnrevealedAmount(Board board) {
+        int value = (int) (board.getCellGrid()
+                .getCells()
+                .stream()
+                .flatMap(Collection::stream)
+                .filter(Cell::isHidden)
+                .count() - board.getNBombs());
+        board.setNumUnexposedRemaining(value);
+        return Math.max(value, 0);
+    }
+
+
+    public int getFlagsCountAround(Board board, int i, int j) {
+        return numberOfCellsByTypeAround(i, j, board, Cell::isFlagged);
+    }
+
+    public void saveBoardAndCells(Board board) {
+        cellGridRepository.save(board.getCellGrid());
+        boardRepository.save(board);
+    }
+
+    private void setInitialized(Board board) {
         board.setInitialized(true);
+        boardRepository.save(board);
     }
 
     private void initializeBoard(Board board) {
@@ -39,13 +79,20 @@ public class BoardService {
             Collections.shuffle(board.getShuffledCells());
         } while (board.getShuffledCells().get(rowToEscape * board.getNRows() + columnToEscape).isBomb());
         Iterator<Cell> iterator = board.getShuffledCells().iterator();
+        CellGrid cellGrid = new CellGrid();
+        List<List<Cell>> cells = new ArrayList<>();
         for (int i = 0; i < board.getNRows(); i++) {
+            List<Cell> row = new ArrayList<>();
             for (int j = 0; j < board.getNColumns(); j++) {
-                board.getCellGrid().getCells().get(i).set(j, iterator.next()); //?
-                board.getCellGrid().getCells().get(i).get(j).setColumn(i);
-                board.getCellGrid().getCells().get(i).get(j).setRow(j);
+                Cell next = iterator.next();
+                row.add(next);
+                next.setRow(i);
+                next.setColumn(j);
             }
+            cells.add(row);
         }
+        cellGrid.setCells(cells);
+        board.setCellGrid(cellGrid);
     }
 
     private void setNumberedCells(Board board) {
@@ -62,6 +109,7 @@ public class BoardService {
                 }
             }
         }
+        cellGridRepository.save(board.getCellGrid());
     }
 
     private int numberOfCellsByTypeAround(int i, int j, Board board, Function<Cell, Boolean> cellTypeFunction) {
@@ -107,30 +155,5 @@ public class BoardService {
             numberOfBombs++;
         }
         return numberOfBombs;
-    }
-
-    public int getCurrentCountOfFlags(Board board) {
-        return (int) board.getCellGrid()
-                .getCells()
-                .stream()
-                .flatMap(Collection::stream)
-                .filter(Cell::isFlagged)
-                .count();
-    }
-
-    public int updateUnrevealedAmount(Board board) {
-        int value = (int) (board.getCellGrid()
-                .getCells()
-                .stream()
-                .flatMap(Collection::stream)
-                .filter(Cell::isHidden)
-                .count() - board.getNBombs());
-        board.setNumUnexposedRemaining(value);
-        return Math.max(value, 0);
-    }
-
-
-    public int getFlagsCountAround(Board board, int i, int j) {
-        return numberOfCellsByTypeAround(i, j, board, Cell::isFlagged);
     }
 }

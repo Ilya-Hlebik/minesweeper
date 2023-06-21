@@ -43,7 +43,7 @@ export default {
     getMines(state) {
       return state.mines;
     },
-    getGameId(state){
+    getGameId(state) {
       return stage.gameId;
     }
   },
@@ -96,7 +96,7 @@ export default {
       state.columns = data.columns;
       state.mines = data.mines;
     },
-    setGameId(state, data){
+    setGameId(state, data) {
       state.gameId = data;
     }
   },
@@ -156,11 +156,10 @@ export default {
         console.log(e);
       }
     },
-    async showAll(store, data) {
+    async showAll(store) {
       try {
-        const response = await axios.post('/backend/game/showAll', {...data, gameId: store.state.gameId});
+        const response = await axios.post('/backend/game/showAll', {gameId: store.state.gameId});
         if (response.status === 200) {
-          debugger
           store.commit('setBoard', response.data.cellResponse);
           store.commit('setGameStatus', response.data.gameStatus);
           store.commit('setStatistics', response.data);

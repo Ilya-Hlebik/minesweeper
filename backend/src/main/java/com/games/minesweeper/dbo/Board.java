@@ -1,5 +1,6 @@
 package com.games.minesweeper.dbo;
 
+import com.games.minesweeper.dto.GameStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -26,6 +27,7 @@ public class Board extends AbstractEntity {
     private final List<Cell> shuffledCells = new ArrayList<>();
     private int numUnexposedRemaining;
     private boolean initialized;
+    private GameStatus gameStatus = GameStatus.IN_PLAY;
 
     public Board(int nRows, int nColumns, int nBombs) {
         this.nRows = nRows;

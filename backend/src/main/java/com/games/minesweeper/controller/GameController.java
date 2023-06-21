@@ -1,9 +1,6 @@
 package com.games.minesweeper.controller;
 
-import com.games.minesweeper.dto.request.BoardInitiateRequest;
-import com.games.minesweeper.dto.request.MinesCountRequest;
-import com.games.minesweeper.dto.request.RevealCellRequest;
-import com.games.minesweeper.dto.request.SetFlaggedRequest;
+import com.games.minesweeper.dto.request.*;
 import com.games.minesweeper.dto.response.GameResponse;
 import com.games.minesweeper.dto.response.MinesCountResponse;
 import com.games.minesweeper.service.GameService;
@@ -38,8 +35,8 @@ public class GameController {
     }
 
     @PostMapping(value = "/showAll")
-    public GameResponse showAll(@RequestBody String gameId) {
-        return gameService.showAll(gameId);
+    public GameResponse showAll(@RequestBody GameIdRequest gameIdRequest) {
+        return gameService.showAll(gameIdRequest);
     }
 
     @PostMapping(value = "/showCellsOptions")
