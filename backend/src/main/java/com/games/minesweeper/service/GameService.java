@@ -116,6 +116,17 @@ public class GameService {
         return defaultGameResponse;
     }
 
+    public void updateHighlightForUnrevealedCell(Cell cell) {
+        if (cell.isHidden() && !cell.isFlagged()) {
+            cell.setHighlighted(!cell.isHighlighted());
+        }
+    }
+
+    public GameResponse getGameById(String gameId) {
+        Board board = boardRepository.findById(gameId).orElseThrow();
+        return getDefaultGameResponse(board);
+    }
+
     private void openCell(int i, int j, Board board) {
         if (i < 0 || i >= board.getNRows() || j < 0 || j >= board.getNColumns()
                 || (board.isInitialized() && (!board.getCellGrid().getCells().get(i).get(j).isHidden()
@@ -198,12 +209,6 @@ public class GameService {
         if (!openedCells.contains(cell) && (cell.isBlank() || !cell.isBomb())) {
             cells.add(cell);
             openedCells.add(cell);
-        }
-    }
-
-    public void updateHighlightForUnrevealedCell(Cell cell) {
-        if (cell.isHidden() && !cell.isFlagged()) {
-            cell.setHighlighted(!cell.isHighlighted());
         }
     }
 

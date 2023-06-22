@@ -43,7 +43,7 @@
 </template>
 
 <script>
-  import {mapActions, mapGetters} from 'vuex';
+  import {mapActions, mapGetters, mapMutations} from 'vuex';
 
   export default {
     name: "GameSettings",
@@ -56,8 +56,10 @@
     },
     methods: {
       onFinish() {
-        this.initiateBoard({rows: this.rows, columns: this.columns, mines: this.mines});
-        this.$emit("showBoard", true)
+        this.setGameSettings({rows: this.rows, columns: this.columns, mines: this.mines});
+     //   this.initiateBoard({rows: this.rows, columns: this.columns, mines: this.mines});
+       // this.$emit("showBoard", true)
+        this.$router.push('/game')
       },
       onFinishFailed() {
         console.log("finish failed");
@@ -66,6 +68,9 @@
         calculateMinesCount: 'calculateMinesCount',
         initiateBoard: 'initiateBoard'
       }),
+      ...mapMutations('game',{
+        setGameSettings: 'setGameSettings'
+      })
     },
     computed: {
       showMinesCount() {

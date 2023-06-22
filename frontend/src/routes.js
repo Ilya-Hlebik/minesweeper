@@ -1,30 +1,42 @@
 import Vue from 'vue';
 import VueRouter from 'vue-router';
 import {store} from './store';
-import Field from './components/Field.vue';
+import Field from './components/Field';
 
 Vue.use(VueRouter);
 
 const routes = [
 
   {
-    name: 'field',
-    path: '/field',
-    component: Field,
-  },
-/*  {
-    path: '*',
-    async beforeEnter(from, to, next) {
-      console.log(1)
-      const isLogged = await store.dispatch('login/checkAuthorization')
-      if (isLogged === true) {
+    path: '/game',
+    async beforeEnter(to, from, next) {
+      let gameId = await store.dispatch('game/initiateBoard');
+      if (gameId !== null) {
+        next('/game/' + gameId);
+      } else {
         next();
       }
-      else {
-        next('field')
-      }
     }
-  },*/
+  },
+  {
+    path: '/game/:id',
+    async  beforeEnter  (to, from, next)  {
+      await store.dispatch('game/getGameById', to.params.id);
+      next();
+    },
+    component: Field,
+    props: {boardInitiated: true}
+  },
+  {
+    name: 'menu',
+    path: '/menu',
+    component: Field,
+  },
+  {
+    path: '*',
+    redirect: {name: 'menu'}
+
+  },
 ];
 
 export const router = new VueRouter({

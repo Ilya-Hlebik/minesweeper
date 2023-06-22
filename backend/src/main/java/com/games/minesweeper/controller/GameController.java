@@ -24,6 +24,11 @@ public class GameController {
         return gameService.initiateBoard(minesCountRequest);
     }
 
+    @GetMapping(value = "/{gameId}")
+    public GameResponse getGameById(@PathVariable String gameId) {
+        return gameService.getGameById(gameId);
+    }
+
     @PostMapping(value = "/revealCell")
     public GameResponse revealCell(@RequestBody RevealCellRequest revealCellRequest) {
         return gameService.revealCell(revealCellRequest);

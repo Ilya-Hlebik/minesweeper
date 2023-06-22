@@ -5,7 +5,7 @@
         <h1>Minesweeper</h1>
       </a-layout-header>
       <a-layout-content class="content">
-        <game-settings v-if="!boardInitiated" @showBoard="onShowBoard">
+        <game-settings v-if="!boardInitiated" >
         </game-settings>
         <div class="board" v-if="boardInitiated">
           <statistics></statistics>
@@ -57,10 +57,10 @@
   export default {
     data() {
       return {
-        boardInitiated: false,
         needShowCellsOptions: false
       }
     },
+    props: ['boardInitiated'],
     methods: {
       mouseDownAction(event, rowIndex, colIndex, revealed, content) {
         if (event.buttons === 3 && revealed && content !== '') {
@@ -101,9 +101,7 @@
         this.resetStatistic();
         this.initiateBoard(({rows: this.getRows, columns: this.getColumns, mines: this.getMines}));
       },
-      onShowBoard(value) {
-        this.boardInitiated = value
-      },
+
       ...mapActions('game', {
         revealCellOnBoard: 'revealCell',
         setFlagged: 'setFlagged',

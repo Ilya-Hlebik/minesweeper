@@ -44,7 +44,7 @@ export default {
       return state.mines;
     },
     getGameId(state) {
-      return stage.gameId;
+      return state.gameId;
     }
   },
   mutations: {
@@ -120,19 +120,31 @@ export default {
         console.log(e);
       }
     },
-    async initiateBoard(store, data) {
+    async initiateBoard(store) {
       try {
-        store.commit('setGameSettings', data);
-        const response = await axios.post('/backend/game/initiate', data);
+        //store.commit('setGameSettings', data);
+        const response = await axios.post('/backend/game/initiate', {rows: store.state.rows, columns: store.state.columns, mines: store.state.mines});
         if (response.status === 200) {
           store.commit('setBoard', response.data.cellResponse);
           store.commit('setGameId', response.data.gameId);
           store.dispatch('resetStatistic');
-          store.commit('setMaximumCountOfFlags', data.mines);
-          store.commit('setTotalCountOfMines', data.mines);
+          store.commit('setMaximumCountOfFlags', store.state.mines);
+          store.commit('setTotalCountOfMines', store.state.mines);
         }
+        return response.data.gameId;
       } catch (e) {
         console.log(e);
+      }
+    },
+    async getGameById(store, data) {
+      const response = await axios.get('/backend/game/' + data);
+      store.commit('setGameId', response.data.gameId);
+      if (response.status === 200) {
+        store.commit('setBoard', response.data.cellResponse);
+        store.commit('setGameId', response.data.gameId);
+        store.dispatch('resetStatistic');
+        store.commit('setMaximumCountOfFlags', store.state.mines);
+        store.commit('setTotalCountOfMines', store.state.mines);
       }
     },
     async revealCell(store, data) {
