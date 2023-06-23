@@ -57,8 +57,6 @@
     methods: {
       onFinish() {
         this.setGameSettings({rows: this.rows, columns: this.columns, mines: this.mines});
-     //   this.initiateBoard({rows: this.rows, columns: this.columns, mines: this.mines});
-       // this.$emit("showBoard", true)
         this.$router.push('/game')
       },
       onFinishFailed() {

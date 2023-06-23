@@ -8,10 +8,13 @@ Vue.use(VueRouter);
 const routes = [
 
   {
+    name: 'game',
     path: '/game',
     async beforeEnter(to, from, next) {
+      await store.commit('game/resetGame');
+      await store.dispatch('game/resetStatistic');
       let gameId = await store.dispatch('game/initiateBoard');
-      if (gameId !== null) {
+      if (gameId !== null && to.path === '/game') {
         next('/game/' + gameId);
       } else {
         next();
@@ -19,8 +22,9 @@ const routes = [
     }
   },
   {
+    name: 'gameID',
     path: '/game/:id',
-    async  beforeEnter  (to, from, next)  {
+    async beforeEnter(to, from, next) {
       await store.dispatch('game/getGameById', to.params.id);
       next();
     },
@@ -30,6 +34,11 @@ const routes = [
   {
     name: 'menu',
     path: '/menu',
+    async beforeEnter(to, from, next) {
+      await store.commit('game/resetGame');
+      await store.dispatch('game/resetStatistic');
+      next();
+    },
     component: Field,
   },
   {

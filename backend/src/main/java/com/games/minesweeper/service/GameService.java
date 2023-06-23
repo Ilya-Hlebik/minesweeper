@@ -32,18 +32,8 @@ public class GameService {
     @Transactional
     public GameResponse initiateBoard(BoardInitiateRequest minesCountRequest) {
         Board boardToSave = new Board(minesCountRequest.getRows(), minesCountRequest.getColumns(), minesCountRequest.getMines());
-        CellResponse[][] cellResponse = new CellResponse[minesCountRequest.getRows()][minesCountRequest.getColumns()];
-        for (int i = 0; i < minesCountRequest.getRows(); i++) {
-            for (int j = 0; j < minesCountRequest.getColumns(); j++) {
-                cellResponse[i][j] = new CellResponse();
-            }
-        }
         Board saveBoard = boardRepository.save(boardToSave);
-        return GameResponse
-                .builder()
-                .cellResponse(cellResponse)
-                .gameId(saveBoard.getId())
-                .build();
+        return getEmptyGameResponse(saveBoard);
     }
 
     @Transactional
@@ -124,7 +114,24 @@ public class GameService {
 
     public GameResponse getGameById(String gameId) {
         Board board = boardRepository.findById(gameId).orElseThrow();
+        if (board.getCellGrid() == null) {
+            return getEmptyGameResponse(board);
+        }
         return getDefaultGameResponse(board);
+    }
+
+    private GameResponse getEmptyGameResponse(Board board) {
+        CellResponse[][] cellResponse = new CellResponse[board.getNRows()][board.getNColumns()];
+        for (int i = 0; i < board.getNRows(); i++) {
+            for (int j = 0; j < board.getNColumns(); j++) {
+                cellResponse[i][j] = new CellResponse();
+            }
+        }
+        return GameResponse
+                .builder()
+                .cellResponse(cellResponse)
+                .gameId(board.getId())
+                .build();
     }
 
     private void openCell(int i, int j, Board board) {

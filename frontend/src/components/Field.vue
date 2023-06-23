@@ -5,7 +5,7 @@
         <h1>Minesweeper</h1>
       </a-layout-header>
       <a-layout-content class="content">
-        <game-settings v-if="!boardInitiated" >
+        <game-settings v-if="!boardInitiated">
         </game-settings>
         <div class="board" v-if="boardInitiated">
           <statistics></statistics>
@@ -42,8 +42,20 @@
       </a-layout-footer>
 
       <a-layout-footer class="footer" v-show="boardInitiated">
-        <button class="mr-20" @click="resetGame">Reset</button>
-        <button class="mr-20" @click="restartGame">Restart</button>
+        <router-link class="mr-20"
+                     key="reset"
+                     to="/menu"
+                     active-class="active"
+                     tag="button">
+          Reset
+        </router-link>
+        <router-link class="mr-20"
+                     key="restart"
+                     to="/game"
+                     active-class="active"
+                     tag="button">
+          Restart
+        </router-link>
       </a-layout-footer>
     </a-layout>
   </div>
@@ -88,20 +100,6 @@
         }
         // Logic to toggle flag on the cell goes here
       },
-      resetGame() {
-        this.onShowBoard(false);
-        this.setGameStatus('');
-        this.setBoard(null);
-        this.resetStatistic();
-        // Logic to reset the game goes here
-      },
-      restartGame() {
-        this.setGameStatus('');
-        this.setBoard(null);
-        this.resetStatistic();
-        this.initiateBoard(({rows: this.getRows, columns: this.getColumns, mines: this.getMines}));
-      },
-
       ...mapActions('game', {
         revealCellOnBoard: 'revealCell',
         setFlagged: 'setFlagged',

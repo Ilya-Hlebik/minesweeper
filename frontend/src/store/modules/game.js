@@ -98,6 +98,10 @@ export default {
     },
     setGameId(state, data) {
       state.gameId = data;
+    },
+    resetGame(state) {
+      state.gameStatus = ''
+      state.board = null
     }
   },
   actions: {
@@ -123,7 +127,11 @@ export default {
     async initiateBoard(store) {
       try {
         //store.commit('setGameSettings', data);
-        const response = await axios.post('/backend/game/initiate', {rows: store.state.rows, columns: store.state.columns, mines: store.state.mines});
+        const response = await axios.post('/backend/game/initiate', {
+          rows: store.state.rows,
+          columns: store.state.columns,
+          mines: store.state.mines
+        });
         if (response.status === 200) {
           store.commit('setBoard', response.data.cellResponse);
           store.commit('setGameId', response.data.gameId);
