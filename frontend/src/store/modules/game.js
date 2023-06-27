@@ -126,7 +126,6 @@ export default {
     },
     async initiateBoard(store) {
       try {
-        //store.commit('setGameSettings', data);
         const response = await axios.post('/backend/game/initiate', {
           rows: store.state.rows,
           columns: store.state.columns,
