@@ -77,7 +77,7 @@ public class BoardService {
     private void shuffleBoard(int rowToEscape, int columnToEscape, Board board) {
         do {
             Collections.shuffle(board.getShuffledCells());
-        } while (board.getShuffledCells().get(rowToEscape * board.getNRows() + columnToEscape).isBomb());
+        } while (board.getShuffledCells().get(rowToEscape * board.getNColumns() + columnToEscape).isBomb());
         Iterator<Cell> iterator = board.getShuffledCells().iterator();
         CellGrid cellGrid = new CellGrid();
         List<List<Cell>> cells = new ArrayList<>();
