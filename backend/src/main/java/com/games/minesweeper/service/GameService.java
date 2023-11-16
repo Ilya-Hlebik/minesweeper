@@ -17,9 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
 import java.util.function.BiConsumer;
 
 @Service
@@ -159,22 +157,32 @@ public class GameService {
     }
 
     private void openAllBlankCells(Board board, Cell cell) {
-        Queue<Cell> cellsQueue = new LinkedList<>();
         List<Cell> openedCells = new ArrayList<>();
-        cellsQueue.add(cell);
-        openedCells.add(cell);
-        List<List<Cell>> cellsFromGrid = board.getCellGrid().getCells();
-        while (!cellsQueue.isEmpty()) {
-            Cell poll = cellsQueue.poll();
-            int i = poll.getRow();
-            int j = poll.getColumn();
-            poll.setHidden(false);
-            System.out.println("Open " + i + " " + j);
-            if (poll.isBlank()) {
-                checkOtherSpots(board, i, j, (argI, argJ) -> checkCellOnBlank(cellsFromGrid.get(argI).get(argJ), cellsQueue, openedCells));
-            }
-        }
+        openAllBlankCells(board, openedCells, cell.getColumn(), cell.getRow());
         openedCells.stream().distinct().filter(cell1 -> !cell1.isHidden()).forEach(cell1 -> board.decreaseNumUnexposedRemaining());
+    }
+
+    private void openAllBlankCells(Board board, List<Cell> openedCells, int i, int j) {
+        if (i < 0 || j < 0 || j > board.getNColumns() - 1 || i > board.getNRows() - 1) {
+            return;
+        }
+        Cell cell = board.getCellGrid().getCells().get(i).get(j);
+        if (!(!openedCells.contains(cell) && (cell.isBlank() || !cell.isBomb()))) {
+            return;
+        }
+        cell.setHidden(false);
+        openedCells.add(cell);
+        if (cell.isBlank()) {
+            System.out.println("Open " + i + " " + j);
+            openAllBlankCells(board, openedCells, i - 1, j - 1);
+            openAllBlankCells(board, openedCells, i - 1, j);
+            openAllBlankCells(board, openedCells, i - 1, j + 1);
+            openAllBlankCells(board, openedCells, i, j + 1);
+            openAllBlankCells(board, openedCells, i + 1, j + 1);
+            openAllBlankCells(board, openedCells, i + 1, j);
+            openAllBlankCells(board, openedCells, i + 1, j - 1);
+            openAllBlankCells(board, openedCells, i, j - 1);
+        }
     }
 
     private void checkOtherSpots(Board board, int i, int j, BiConsumer<Integer, Integer> biConsumer) {
@@ -209,13 +217,6 @@ public class GameService {
         if (j - 1 >= 0) {
             //checkLeft
             biConsumer.accept(i, j - 1);
-        }
-    }
-
-    private void checkCellOnBlank(Cell cell, Queue<Cell> cells, List<Cell> openedCells) {
-        if (!openedCells.contains(cell) && (cell.isBlank() || !cell.isBomb())) {
-            cells.add(cell);
-            openedCells.add(cell);
         }
     }
 
